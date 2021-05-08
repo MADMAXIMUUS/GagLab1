@@ -1,0 +1,15 @@
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\bin\Debug\GagLab1_WF.exe.config
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\bin\Debug\GagLab1_WF.exe
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\bin\Debug\GagLab1_WF.pdb
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\obj\Debug\GagLab1_WF.csprojAssemblyReference.cache
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\obj\Debug\GagLab1_WF.Form1.resources
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\obj\Debug\GagLab1_WF.Properties.Resources.resources
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\obj\Debug\GagLab1_WF.csproj.GenerateResource.cache
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\obj\Debug\GagLab1_WF.csproj.CoreCompileInputs.cache
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\obj\Debug\GagLab1_WF.exe
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\obj\Debug\GagLab1_WF.pdb
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\bin\Debug\Newtonsoft.Json.dll
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\bin\Debug\Newtonsoft.Json.xml
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\obj\Debug\GagLab1_WF.csproj.CopyComplete
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\obj\Debug\GagLab1_WF.Form2.resources
+D:\MAI\GagLab\GagLab1_WF\GagLab1_WF\obj\Debug\GagLab1_WF.Form3.resources

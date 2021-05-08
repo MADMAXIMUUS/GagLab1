@@ -12,6 +12,7 @@ namespace GagLab1_WF
             InitializeComponent();
             saveFileDialog1.FileName = Directory.GetCurrentDirectory() + @"\Resmod00";
             PathInput.Text = saveFileDialog1.FileName;
+            PathInput.Focus();
             if (IsOpen)
             {
                 OpenFileButton.Visible = true;
@@ -34,6 +35,14 @@ namespace GagLab1_WF
         {
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
                 PathInput.Text = saveFileDialog1.FileName;
+        }
+
+        private void PathInput_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                OkButton.PerformClick();
+            }
         }
     }
 }

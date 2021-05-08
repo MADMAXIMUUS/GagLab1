@@ -48,6 +48,7 @@ namespace GagLab1_WF
             this.PathInput.Name = "PathInput";
             this.PathInput.Size = new System.Drawing.Size(550, 26);
             this.PathInput.TabIndex = 0;
+            this.PathInput.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PathInput_KeyDown);
             // 
             // OkButton
             // 
@@ -97,7 +98,7 @@ namespace GagLab1_WF
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
             // 
-            // SaveDialogButton
+            // SaveFileButton
             // 
             this.SaveFileButton.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (204)));
             this.SaveFileButton.Location = new System.Drawing.Point(565, 31);

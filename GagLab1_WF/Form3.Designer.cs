@@ -44,6 +44,7 @@ namespace GagLab1_WF
             this.ResNumberInput.Name = "ResNumberInput";
             this.ResNumberInput.Size = new System.Drawing.Size(235, 26);
             this.ResNumberInput.TabIndex = 0;
+            this.ResNumberInput.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ResNumberInput_KeyDown);
             // 
             // OkButton
             // 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 
@@ -6,8 +7,8 @@ namespace GagLab1_WF
 {
     public partial class Form1 : Form
     {
-        public Form2 f2; 
-        public Form3 f3; 
+        public Form2 f2;
+        public Form3 f3;
         public int Capacity;
 
         public Form1()
@@ -15,23 +16,25 @@ namespace GagLab1_WF
             InitializeComponent();
             f2 = new Form2();
             f3 = new Form3();
-        } ///////////////////////////////////////////////////////////////////////////////
+        }
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            Random rand = new Random();
             SetUp.On(this);
+            timer1.Interval = rand.Next(10000, 100000);
+            timer1.Start();
         }
 
-        // //////// processing the number of resources specified by the user //////////////
         public void ResNumberInput()
         {
             try
             {
-                Model.vRes_s = new string[Capacity]; //initializing of resource set model
-                for (int i = 0; i < Model.vRes_s.Length; i++)
-                    Model.vRes_s[i] = "Free"; //all resources are marked free
-                File.WriteAllLines(SetUp.Path, Model.vRes_s); //model saving is checked
-                SetUp.GenTable(Model.vRes_s, this); //creation of buttons 
+                Model.Resources = new string[Capacity];
+                for (int i = 0; i < Model.Resources.Length; i++)
+                    Model.Resources[i] = "Free";
+                File.WriteAllLines(SetUp.Path, Model.Resources);
+                SetUp.GenTable(Model.Resources, this);
                 toolStripStatusLabel1.Text = "";
             }
             catch (IOException)
@@ -46,8 +49,7 @@ namespace GagLab1_WF
             }
         }
 
-        // ////////// processing the file name specified by the user //////////////////
-        private void PathInput()
+        public void PathInput()
         {
             try
             {
@@ -72,11 +74,13 @@ namespace GagLab1_WF
                     if (dataGridView1.Rows[e.RowIndex].Cells[1].Value.ToString() == "Free")
                     {
                         dataGridView1.Rows[e.RowIndex].Cells[1].Value = "Busy";
+                        dataGridView1.Rows[e.RowIndex].Cells[1].Style.BackColor = Color.Red;
                         Model.Occupy(e.RowIndex.ToString());
                     }
                     else if (dataGridView1.Rows[e.RowIndex].Cells[1].Value.ToString() == "Busy")
                     {
                         dataGridView1.Rows[e.RowIndex].Cells[1].Value = "Free";
+                        dataGridView1.Rows[e.RowIndex].Cells[1].Style.BackColor = Color.Green;
                         Model.Free(e.RowIndex.ToString());
                     }
                 }
@@ -91,21 +95,38 @@ namespace GagLab1_WF
             }
             catch (ResIsBroken ee)
             {
-                toolStripStatusLabel1.Text = "Ячейка " + ee.Message + " со сломанным ресурсом.";
+                toolStripStatusLabel1.Text = "Ресурс в ячейке " + ee.Message + " сломан.";
             }
             catch (ResIdInvalid)
             {
                 toolStripStatusLabel1.Text = "Неправильный номер ячейки!";
             }
 
-            File.WriteAllLines(SetUp.Path, Model.vRes_s);
+            File.WriteAllLines(SetUp.Path, Model.Resources);
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            Random rand = new Random();
+            int id = rand.Next(0, Model.Resources.Length);
+            try
+            {
+                dataGridView1.Rows[id].Cells[1].Value = "Broken";
+                dataGridView1.Rows[id].Cells[1].Style.BackColor = Color.Orange;
+                Model.Broke(id.ToString());
+            }
+            catch (ResIsBroken ee)
+            {
+                toolStripStatusLabel1.Text = "Ресурс в ячейке " + ee.Message + " сломан.";
+            }
+            catch (AllResIsBusy)
+            {
+                MessageBox.Show("Все ресурсы заняты, ваш запрос отменен");
+            }
         }
     }
 
-    // ////////////////////////////////////////////////////////////////////////////////////////
-    class ResIdInvalid : Exception
-    {
-    }
+    class ResIdInvalid : Exception { }
 
     class ResIsBusy : Exception
     {
@@ -121,29 +142,37 @@ namespace GagLab1_WF
     {
         public ResIsBroken(string mes) : base(mes) { }
     }
+
     class ResIsRefused : Exception
     {
         public ResIsRefused(string mes) : base(mes) { }
     }
-    
 
-//**************************************************************************************
-    static class SetUp //setup of the application *****************
-//**************************************************************************************
+    class AllResIsBusy : Exception { }
+
+    class ResIsChanged : Exception
     {
-        public static string Path; //путь к файлу, сохраняющему модель
+        public ResIsChanged(string mes) : base(mes) { }
+    }
+
+
+    static class SetUp
+    {
+        public static string Path;
 
         static MessageBoxButtons buttons = MessageBoxButtons.YesNo;
 
-        ////////////////////////////////////////////////////////////////////////////////////////
-        private static void AskPath(Form2 f2) //textBox for path input becomes visible
+        private static void AskPath(Form1 f1)
         {
-            if (f2.ShowDialog() == DialogResult.OK)
-                Path = f2.PathInput.Text;
-            else AskPath(f2);
-        } /////////////////////////////////////////////////////////////////////////////////////////
+            if (f1.f2.ShowDialog() == DialogResult.OK)
+            {
+                Path = f1.f2.PathInput.Text;
+                f1.PathInput();
+            }
+            else AskPath(f1);
+        }
 
-        public static void ClearModel(Form1 form) //textBox for number of resources becomes visible
+        public static void ClearModel(Form1 form)
         {
             if (form.f3.ShowDialog() == DialogResult.OK)
             {
@@ -153,19 +182,17 @@ namespace GagLab1_WF
             else ClearModel(form);
         }
 
-        /////////////////////////////////////////////////////////////////////////////////////////
         public static void GetModel(Form1 form)
         {
             if (MessageBox.Show("Обновить файл?", "", buttons) == DialogResult.Yes)
-                ClearModel(form); //the model gets initiated
+                ClearModel(form);
             else
             {
-                Model.vRes_s = File.ReadAllLines(Path);
-                GenTable(Model.vRes_s, form); //the model is restored from a file
+                Model.Resources = File.ReadAllLines(Path);
+                GenTable(Model.Resources, form);
             }
         }
 
-        // /////////////////// Entry point of the application //////////////////
         public static void On(Form1 form)
         {
             try
@@ -177,16 +204,16 @@ namespace GagLab1_WF
                         Path = Directory.GetCurrentDirectory() + @"\Resmod00";
                         GetModel(form);
                     }
-                    else AskPath(form.f2); // inquire path by the user
+                    else AskPath(form);
                 }
                 else
                 {
                     if (MessageBox.Show("Создать стандартный файл?", "", buttons) == DialogResult.Yes)
                     {
                         Path = Directory.GetCurrentDirectory() + @"\Resmod00";
-                        ClearModel(form); //initiate the model
+                        ClearModel(form);
                     }
-                    else AskPath(form.f2); // inquire path by the user
+                    else AskPath(form);
                 }
             }
             catch (IOException)
@@ -197,48 +224,68 @@ namespace GagLab1_WF
             {
                 form.toolStripStatusLabel1.Text = "Ошибка ввода-вывода.";
             }
-        } ////////////////////////////////////////////////////////////////////////////////////////
+        }
 
         public static void GenTable(string[] vModel, Form1 form)
         {
             for (int i = 0; i < vModel.Length; i++)
             {
-                string[] row = {$"{i}", vModel[i]};
+                string[] row = {$"{i + 1}", vModel[i]};
                 form.dataGridView1.Rows.Add(row);
+                if (vModel[i] == "Free")
+                    form.dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Green;
+                else if (vModel[i] == "Busy")
+                    form.dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Red;
+                else
+                    form.dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Orange;
             }
         }
     }
 
-//**************************************************************************************
-    static class Model //model implementation  **************************
-//**************************************************************************************
+    static class Model
     {
-        public static string[] vRes_s; //Модель набора ресурсов /////////////////////////////////////////////////////////////////////////////////////
+        public static string[] Resources;
 
         public static void Occupy(string cn)
         {
-            if ((Convert.ToInt16(cn) > vRes_s.Length) | (Convert.ToInt16(cn) < 0)) throw new ResIdInvalid();
-            vRes_s[Convert.ToInt16(cn) - 1] = "Busy";
+            if ((Convert.ToInt16(cn) > Resources.Length) | (Convert.ToInt16(cn) < 0)) throw new ResIdInvalid();
+            Resources[Convert.ToInt16(cn)] = "Busy";
             throw new ResIsBusy(cn);
         }
 
         public static void Free(string cn)
         {
-            if ((Convert.ToInt16(cn) > vRes_s.Length) | (Convert.ToInt16(cn) < 0)) throw new ResIdInvalid();
-            vRes_s[Convert.ToInt16(cn) - 1] = "Free";
+            if ((Convert.ToInt16(cn) > Resources.Length) | (Convert.ToInt16(cn) < 0)) throw new ResIdInvalid();
+            Resources[Convert.ToInt16(cn)] = "Free";
             throw new ResIsFree(cn);
         }
 
         public static void Broke(string cn)
         {
-            vRes_s[Convert.ToInt16(cn) - 1] = "Broken";
+            Resources[Convert.ToInt16(cn)] = "Broken";
+            Change(cn);
             throw new ResIsBroken(cn);
         }
 
         public static void Refuse(string cn)
         {
-            vRes_s[Convert.ToInt16(cn) - 1] = "Free";
+            Resources[Convert.ToInt16(cn)] = "Free";
             throw new ResIsRefused(cn);
+        }
+
+        public static void Change(string cn)
+        {
+            for (int i = 0; i < Resources.Length; i++)
+            {
+                if (i != Convert.ToInt32(cn) && Resources[i] != "Busy" && Resources[i] != "Broken")
+                {
+                    Occupy(i.ToString());
+                    Refuse(cn);
+                    throw new ResIsChanged(i.ToString());
+                }
+            }
+
+            throw new AllResIsBusy();
         }
     }
 }

@@ -22,7 +22,7 @@ namespace GagLab1_WF
         {
             Random rand = new Random();
             SetUp.On(this);
-            timer1.Interval = rand.Next(10000, 100000);
+            timer1.Interval = rand.Next(100000, 1000000);
             timer1.Start();
         }
 
@@ -85,6 +85,19 @@ namespace GagLab1_WF
                     }
                 }
             }
+            catch (ResIsBroken ee)
+            {
+                toolStripStatusLabel1.Text = "Ресурс в ячейке " + ee.Message + " сломан.";
+            }
+            catch (AllResIsBusy)
+            {
+                MessageBox.Show("Все ресурсы заняты, ваш запрос отменен");
+            }
+            catch (ResIsChanged ee)
+            {
+                dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Style.BackColor = Color.Green;
+                toolStripStatusLabel1.Text = "Сломанный ресурс был заменен на " + ee.Message + " ячейку.";
+            }
             catch (ResIsBusy ee)
             {
                 toolStripStatusLabel1.Text = "Ячейка " + ee.Message + " занята.";
@@ -93,14 +106,15 @@ namespace GagLab1_WF
             {
                 toolStripStatusLabel1.Text = "Ячейка " + ee.Message + " свободна.";
             }
-            catch (ResIsBroken ee)
-            {
-                toolStripStatusLabel1.Text = "Ресурс в ячейке " + ee.Message + " сломан.";
-            }
             catch (ResIdInvalid)
             {
                 toolStripStatusLabel1.Text = "Неправильный номер ячейки!";
             }
+            catch (ResIsRefused ee)
+            {
+                toolStripStatusLabel1.Text = "Ресурс в ячейке " + ee.Message + " сломан.";
+            }
+            catch (ArgumentOutOfRangeException) { }
 
             File.WriteAllLines(SetUp.Path, Model.Resources);
         }
@@ -123,6 +137,33 @@ namespace GagLab1_WF
             {
                 MessageBox.Show("Все ресурсы заняты, ваш запрос отменен");
             }
+            catch (ResIsChanged ee)
+            {
+                dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Value = "Busy";
+                dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Style.BackColor = Color.Red;
+                toolStripStatusLabel1.Text = "Сломанный ресурс был заменен на " + ee.Message + " ячейку.";
+            }
+            catch (ResIsBusy ee)
+            {
+                toolStripStatusLabel1.Text = "Ячейка " + ee.Message + " занята.";
+            }
+            catch (ResIsFree ee)
+            {
+                toolStripStatusLabel1.Text = "Ячейка " + ee.Message + " свободна.";
+            }
+            catch (ResIdInvalid)
+            {
+                toolStripStatusLabel1.Text = "Неправильный номер ячейки!";
+            }
+            catch (ResIsRefused ee)
+            {
+                dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Value = "Free";
+                dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Style.BackColor = Color.Green;
+                toolStripStatusLabel1.Text = "Ресурс в ячейке " + ee.Message + " восстановлен.";
+            }
+            catch (ArgumentOutOfRangeException) { }
+
+            File.WriteAllLines(SetUp.Path, Model.Resources);
         }
     }
 
@@ -250,27 +291,32 @@ namespace GagLab1_WF
         {
             if ((Convert.ToInt16(cn) > Resources.Length) | (Convert.ToInt16(cn) < 0)) throw new ResIdInvalid();
             Resources[Convert.ToInt16(cn)] = "Busy";
-            throw new ResIsBusy(cn);
+            throw new ResIsBusy((Convert.ToInt32(cn) + 1).ToString());
         }
 
         public static void Free(string cn)
         {
             if ((Convert.ToInt16(cn) > Resources.Length) | (Convert.ToInt16(cn) < 0)) throw new ResIdInvalid();
             Resources[Convert.ToInt16(cn)] = "Free";
-            throw new ResIsFree(cn);
+            throw new ResIsFree((Convert.ToInt32(cn) + 1).ToString());
         }
 
         public static void Broke(string cn)
         {
+            Console.WriteLine(cn);
+            if (Resources[Convert.ToInt16(cn)] == "Busy")
+                Change(cn);
+            else 
+                Refuse(cn);
             Resources[Convert.ToInt16(cn)] = "Broken";
-            Change(cn);
-            throw new ResIsBroken(cn);
+            throw new ResIsBroken((Convert.ToInt32(cn) + 1).ToString());
         }
 
         public static void Refuse(string cn)
         {
+            Console.WriteLine(cn);
             Resources[Convert.ToInt16(cn)] = "Free";
-            throw new ResIsRefused(cn);
+            throw new ResIsRefused((Convert.ToInt32(cn) + 1).ToString());
         }
 
         public static void Change(string cn)
@@ -281,10 +327,11 @@ namespace GagLab1_WF
                 {
                     Occupy(i.ToString());
                     Refuse(cn);
-                    throw new ResIsChanged(i.ToString());
+                    throw new ResIsChanged( (i+1).ToString());
                 }
             }
 
+            Refuse(cn);
             throw new AllResIsBusy();
         }
     }

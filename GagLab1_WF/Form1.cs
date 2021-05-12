@@ -7,15 +7,15 @@ namespace GagLab1_WF
 {
     public partial class Form1 : Form
     {
-        public Form2 f2;
-        public Form3 f3;
+        public readonly Form2 F2;
+        public readonly Form3 F3;
         public int Capacity;
 
         public Form1()
         {
             InitializeComponent();
-            f2 = new Form2();
-            f3 = new Form3();
+            F2 = new Form2();
+            F3 = new Form3();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -40,12 +40,12 @@ namespace GagLab1_WF
             }
             catch (IOException)
             {
-                toolStripStatusLabel1.Text = "Ошибка при записи в файл!";
+                toolStripStatusLabel1.Text = @"Ошибка при записи в файл!";
                 PathInput();
             }
             catch
             {
-                toolStripStatusLabel1.Text = "Было введено неверное число!";
+                toolStripStatusLabel1.Text = @"Было введено неверное число!";
                 ResNumberInput();
             }
         }
@@ -54,14 +54,14 @@ namespace GagLab1_WF
         {
             try
             {
-                SetUp.Path = f2.PathInput.Text;
+                SetUp.Path = F2.PathInput.Text;
                 if (File.Exists(SetUp.Path)) SetUp.GetModel(this);
                 else SetUp.ClearModel(this);
                 toolStripStatusLabel1.Text = "";
             }
             catch
             {
-                toolStripStatusLabel1.Text = "Файл не удаётся создать или он не доступен!";
+                toolStripStatusLabel1.Text = @"Файл не удаё тся создать или он не доступен!";
                 PathInput();
             }
         }
@@ -88,30 +88,30 @@ namespace GagLab1_WF
             }
             catch (ResIsBroken ee)
             {
-                toolStripStatusLabel1.Text = "Ресурс в ячейке " + ee.Message + " сломан.";
+                toolStripStatusLabel1.Text = @"Ресурс в ячейке " + ee.Message + @" сломан.";
             }
             catch (AllResIsBusy)
             {
                 timer1.Stop();
-                MessageBox.Show("Все ресурсы заняты, ваш запрос отменен");
+                MessageBox.Show(@"Все ресурсы заняты, ваш запрос отменен");
             }
             catch (ResIsChanged ee)
             {
                 dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Value = "Busy";
                 dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Style.BackColor = Color.Red;
-                toolStripStatusLabel1.Text = "Сломанный ресурс был заменен на " + ee.Message + " ячейку.";
+                toolStripStatusLabel1.Text = $@"Сломанный ресурс был заменен на {ee.Message} ячейку.";
             }
             catch (ResIsBusy ee)
             {
-                toolStripStatusLabel1.Text = "Ячейка " + ee.Message + " занята.";
+                toolStripStatusLabel1.Text = $@"Ячейка {ee.Message} занята.";
             }
             catch (ResIsFree ee)
             {
-                toolStripStatusLabel1.Text = "Ячейка " + ee.Message + " свободна.";
+                toolStripStatusLabel1.Text = $@"Ячейка {ee.Message} свободна.";
             }
             catch (ResIdInvalid)
             {
-                toolStripStatusLabel1.Text = "Неправильный номер ячейки!";
+                toolStripStatusLabel1.Text = @"Неправильный номер ячейки!";
             }
             catch (ArgumentOutOfRangeException) { }
 
@@ -132,31 +132,31 @@ namespace GagLab1_WF
             }
             catch (ResIsBroken ee)
             {
-                toolStripStatusLabel1.Text = "Ресурс в ячейке " + ee.Message + " сломан.";
+                toolStripStatusLabel1.Text = $@"Ресурс в ячейке {ee.Message} сломан.";
             }
             catch (AllResIsBusy ee )
             {
                 Model.Refuse(ee.Message, this);
                 timer1.Stop();
-                MessageBox.Show("Все ресурсы заняты, ваш запрос отменен");
+                MessageBox.Show(@"Все ресурсы заняты, ваш запрос отменен");
             }
             catch (ResIsChanged ee)
             {
                 dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Value = "Busy";
                 dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Style.BackColor = Color.Red;
-                toolStripStatusLabel1.Text = "Сломанный ресурс был заменен на " + ee.Message + " ячейку.";
+                toolStripStatusLabel1.Text = $@"Сломанный ресурс был заменен на {ee.Message} ячейку.";
             }
             catch (ResIsBusy ee)
             {
-                toolStripStatusLabel1.Text = "Ячейка " + ee.Message + " занята.";
+                toolStripStatusLabel1.Text = $@"Ячейка {ee.Message} занята.";
             }
             catch (ResIsFree ee)
             {
-                toolStripStatusLabel1.Text = "Ячейка " + ee.Message + " свободна.";
+                toolStripStatusLabel1.Text = $@"Ячейка {ee.Message} свободна.";
             }
             catch (ResIdInvalid)
             {
-                toolStripStatusLabel1.Text = "Неправильный номер ячейки!";
+                toolStripStatusLabel1.Text = @"Неправильный номер ячейки!";
             }
             catch (ArgumentOutOfRangeException) { }
 
@@ -197,9 +197,9 @@ namespace GagLab1_WF
 
         private static void AskPath(Form1 f1)
         {
-            if (f1.f2.ShowDialog() == DialogResult.OK)
+            if (f1.F2.ShowDialog() == DialogResult.OK)
             {
-                Path = f1.f2.PathInput.Text;
+                Path = f1.F2.PathInput.Text;
                 f1.PathInput();
             }
             else AskPath(f1);
@@ -207,9 +207,9 @@ namespace GagLab1_WF
 
         public static void ClearModel(Form1 form)
         {
-            if (form.f3.ShowDialog() == DialogResult.OK)
+            if (form.F3.ShowDialog() == DialogResult.OK)
             {
-                form.Capacity = Convert.ToInt32(form.f3.ResNumberInput.Text);
+                form.Capacity = Convert.ToInt32(form.F3.ResNumberInput.Text);
                 form.ResNumberInput();
             }
             else ClearModel(form);
@@ -217,7 +217,7 @@ namespace GagLab1_WF
 
         public static void GetModel(Form1 form)
         {
-            if (MessageBox.Show("Обновить файл?", "", buttons) == DialogResult.Yes)
+            if (MessageBox.Show(@"Обновить файл?", "", buttons) == DialogResult.Yes)
                 ClearModel(form);
             else
             {
@@ -232,7 +232,7 @@ namespace GagLab1_WF
             {
                 if (File.Exists(Directory.GetCurrentDirectory() + @"\Resmod00"))
                 {
-                    if (MessageBox.Show("Использовать стандартный файл Resmod00?", "", buttons) == DialogResult.Yes)
+                    if (MessageBox.Show(@"Использовать стандартный файл Resmod00?", "", buttons) == DialogResult.Yes)
                     {
                         Path = Directory.GetCurrentDirectory() + @"\Resmod00";
                         GetModel(form);
@@ -241,7 +241,7 @@ namespace GagLab1_WF
                 }
                 else
                 {
-                    if (MessageBox.Show("Создать стандартный файл?", "", buttons) == DialogResult.Yes)
+                    if (MessageBox.Show(@"Создать стандартный файл?", "", buttons) == DialogResult.Yes)
                     {
                         Path = Directory.GetCurrentDirectory() + @"\Resmod00";
                         ClearModel(form);
@@ -251,11 +251,11 @@ namespace GagLab1_WF
             }
             catch (IOException)
             {
-                form.toolStripStatusLabel1.Text = "Файл не открылся.";
+                form.toolStripStatusLabel1.Text = @"Файл не открылся.";
             }
             catch (Exception)
             {
-                form.toolStripStatusLabel1.Text = "Ошибка ввода-вывода.";
+                form.toolStripStatusLabel1.Text = @"Ошибка ввода-вывода.";
             }
         }
 
@@ -263,7 +263,7 @@ namespace GagLab1_WF
         {
             for (int i = 0; i < vModel.Length; i++)
             {
-                string[] row = {$"{i + 1}", vModel[i]};
+                object[] row = {$"{i + 1}", vModel[i]};
                 form.dataGridView1.Rows.Add(row);
                 if (vModel[i] == "Free")
                     form.dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Green;
@@ -308,7 +308,7 @@ namespace GagLab1_WF
             Resources[Convert.ToInt16(cn)] = "Free";
             form1.dataGridView1.Rows[Convert.ToInt32(cn)].Cells[1].Value = "Free";
             form1.dataGridView1.Rows[Convert.ToInt32(cn)].Cells[1].Style.BackColor = Color.Green;
-            form1.toolStripStatusLabel1.Text = "Ресурс в ячейке " + (Convert.ToInt32(cn) - 1) + " восстановлен.";
+            form1.toolStripStatusLabel1.Text = $@"Ресурс в ячейке {Convert.ToInt32(cn) - 1} восстановлен.";
         }
 
         private static void Change(string cn, Form1 form1)

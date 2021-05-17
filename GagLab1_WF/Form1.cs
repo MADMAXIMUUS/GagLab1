@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
-using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace GagLab1_WF
 {
@@ -42,7 +42,7 @@ namespace GagLab1_WF
                     Model.RequestIDs[i] = "";
                 }
 
-                File.WriteAllText(SetUp.Path, JsonSerializer.Serialize(Model));
+                File.WriteAllText(SetUp.Path, JsonConvert.SerializeObject(Model));
                 SetUp.GenTable(this);
                 F3.toolStripStatusLabel1.Text = "";
             }
@@ -142,7 +142,7 @@ namespace GagLab1_WF
             }
             catch (ArgumentOutOfRangeException) { }
 
-            File.WriteAllText(SetUp.Path, JsonSerializer.Serialize(Model));
+            File.WriteAllText(SetUp.Path, JsonConvert.SerializeObject(Model));
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -187,7 +187,7 @@ namespace GagLab1_WF
             }
             catch (ArgumentOutOfRangeException) { }
 
-            File.WriteAllText(SetUp.Path, JsonSerializer.Serialize(Model));
+            File.WriteAllText(SetUp.Path, JsonConvert.SerializeObject(Model));
         }
     }
 
@@ -246,7 +246,7 @@ namespace GagLab1_WF
                 ClearModel(form);
             else
             {
-                form.Model = JsonSerializer.Deserialize<Model>(File.ReadAllText(Path));
+                form.Model = JsonConvert.DeserializeObject<Model>(File.ReadAllText(Path));
                 GenTable(form);
             }
         }

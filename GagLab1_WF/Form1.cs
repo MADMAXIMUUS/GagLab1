@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using System.Text.Json;
 
 namespace GagLab1_WF
 {
@@ -10,10 +11,12 @@ namespace GagLab1_WF
         public readonly Form2 F2;
         public readonly Form3 F3;
         public int Capacity;
+        public Model Model;
 
         public Form1()
         {
             InitializeComponent();
+            Model = new Model();
             F2 = new Form2();
             F3 = new Form3();
         }
@@ -22,8 +25,8 @@ namespace GagLab1_WF
         {
             Random rand = new Random();
             SetUp.On(this);
-            timer1.Interval = rand.Next(100000, 1000000);
-            /*timer1.Interval = rand.Next(1000, 10000);*/
+            /*timer1.Interval = rand.Next(100000, 1000000);*/
+            timer1.Interval = rand.Next(1000, 10000);
             timer1.Start();
         }
 
@@ -32,21 +35,34 @@ namespace GagLab1_WF
             try
             {
                 Model.Resources = new string[Capacity];
+                Model.RequestIDs = new string[Capacity];
                 for (int i = 0; i < Model.Resources.Length; i++)
+                {
                     Model.Resources[i] = "Free";
-                File.WriteAllLines(SetUp.Path, Model.Resources);
-                SetUp.GenTable(Model.Resources, this);
-                toolStripStatusLabel1.Text = "";
+                    Model.RequestIDs[i] = "";
+                }
+
+                File.WriteAllText(SetUp.Path, JsonSerializer.Serialize(Model));
+                SetUp.GenTable(this);
+                F3.toolStripStatusLabel1.Text = "";
             }
             catch (IOException)
             {
-                toolStripStatusLabel1.Text = @"Ошибка при записи в файл!";
-                PathInput();
+                F2.toolStripStatusLabel1.Text = @"Ошибка при записи в файл!";
+                if (F2.ShowDialog() == DialogResult.OK)
+                {
+                    SetUp.Path = F2.PathInput.Text;
+                    PathInput();
+                }
             }
             catch
             {
-                toolStripStatusLabel1.Text = @"Было введено неверное число!";
-                ResNumberInput();
+                F3.toolStripStatusLabel1.Text = @"Было введено неверное число!";
+                if (F3.ShowDialog() == DialogResult.OK)
+                {
+                    Capacity = Convert.ToInt32(F3.ResNumberInput.Text);
+                    ResNumberInput();
+                }
             }
         }
 
@@ -61,8 +77,12 @@ namespace GagLab1_WF
             }
             catch
             {
-                toolStripStatusLabel1.Text = @"Файл не удаё тся создать или он не доступен!";
-                PathInput();
+                F2.toolStripStatusLabel1.Text = @"Файл не удаётся создать или он не доступен!";
+                if (F2.ShowDialog() == DialogResult.OK)
+                {
+                    SetUp.Path = F2.PathInput.Text;
+                    PathInput();
+                }
             }
         }
 
@@ -74,39 +94,46 @@ namespace GagLab1_WF
                 {
                     if (dataGridView1.Rows[e.RowIndex].Cells[1].Value.ToString() == "Free")
                     {
-                        dataGridView1.Rows[e.RowIndex].Cells[1].Value = "Busy";
-                        dataGridView1.Rows[e.RowIndex].Cells[1].Style.BackColor = Color.Red;
                         Model.Occupy(e.RowIndex.ToString());
                     }
                     else if (dataGridView1.Rows[e.RowIndex].Cells[1].Value.ToString() == "Busy")
                     {
-                        dataGridView1.Rows[e.RowIndex].Cells[1].Value = "Free";
-                        dataGridView1.Rows[e.RowIndex].Cells[1].Style.BackColor = Color.Green;
                         Model.Free(e.RowIndex.ToString());
                     }
                 }
             }
-            catch (ResIsBroken ee)
+            catch (AllResIsBusy ee)
             {
-                toolStripStatusLabel1.Text = @"Ресурс в ячейке " + ee.Message + @" сломан.";
-            }
-            catch (AllResIsBusy)
-            {
+                Model.Refuse(ee.Message, this);
                 timer1.Stop();
-                MessageBox.Show(@"Все ресурсы заняты, ваш запрос отменен");
+                if (MessageBox.Show(@"Все ресурсы заняты, ваш запрос отменен") == DialogResult.OK)
+                    timer1.Start();
             }
             catch (ResIsChanged ee)
             {
-                dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Value = "Busy";
-                dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Style.BackColor = Color.Red;
-                toolStripStatusLabel1.Text = $@"Сломанный ресурс был заменен на {ee.Message} ячейку.";
+                dataGridView1.Rows[Convert.ToInt32(ee.Message) - 1].Cells[1].Value =
+                    Model.Resources[Convert.ToInt32(ee.Message) - 1];
+                dataGridView1.Rows[Convert.ToInt32(ee.Message) - 1].Cells[1].Style.BackColor = Color.Red;
+                dataGridView1.Rows[Convert.ToInt32(ee.Message) - 1].Cells[2].Value =
+                    Model.RequestIDs[Convert.ToInt32(ee.Message) - 1];
+                toolStripStatusLabel1.Text = $@"Сломанный ресурс был заменен на ресурс в ячейке {ee.Message}.";
             }
             catch (ResIsBusy ee)
             {
+                dataGridView1.Rows[Convert.ToInt32(ee.Message) - 1].Cells[1].Value =
+                    Model.Resources[Convert.ToInt32(ee.Message) - 1];
+                dataGridView1.Rows[Convert.ToInt32(ee.Message) - 1].Cells[1].Style.BackColor = Color.Red;
+                dataGridView1.Rows[Convert.ToInt32(ee.Message) - 1].Cells[2].Value =
+                    Model.RequestIDs[Convert.ToInt32(ee.Message) - 1];
                 toolStripStatusLabel1.Text = $@"Ячейка {ee.Message} занята.";
             }
             catch (ResIsFree ee)
             {
+                dataGridView1.Rows[Convert.ToInt32(ee.Message) - 1].Cells[1].Value =
+                    Model.Resources[Convert.ToInt32(ee.Message) - 1];
+                dataGridView1.Rows[Convert.ToInt32(ee.Message) - 1].Cells[1].Style.BackColor = Color.Green;
+                dataGridView1.Rows[Convert.ToInt32(ee.Message) - 1].Cells[2].Value =
+                    Model.RequestIDs[Convert.ToInt32(ee.Message) - 1];
                 toolStripStatusLabel1.Text = $@"Ячейка {ee.Message} свободна.";
             }
             catch (ResIdInvalid)
@@ -115,14 +142,14 @@ namespace GagLab1_WF
             }
             catch (ArgumentOutOfRangeException) { }
 
-            File.WriteAllLines(SetUp.Path, Model.Resources);
+            File.WriteAllText(SetUp.Path, JsonSerializer.Serialize(Model));
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
             Random rand = new Random();
-            timer1.Interval = rand.Next(100000, 1000000);
-            /*timer1.Interval = rand.Next(1000, 10000);*/
+            /*timer1.Interval = rand.Next(100000, 1000000);*/
+            timer1.Interval = rand.Next(1000, 10000);
             int id = rand.Next(0, Model.Resources.Length);
             try
             {
@@ -130,21 +157,21 @@ namespace GagLab1_WF
                 dataGridView1.Rows[id].Cells[1].Style.BackColor = Color.Orange;
                 Model.Broke(id.ToString(), this);
             }
-            catch (ResIsBroken ee)
-            {
-                toolStripStatusLabel1.Text = $@"Ресурс в ячейке {ee.Message} сломан.";
-            }
-            catch (AllResIsBusy ee )
+            catch (AllResIsBusy ee)
             {
                 Model.Refuse(ee.Message, this);
                 timer1.Stop();
-                MessageBox.Show(@"Все ресурсы заняты, ваш запрос отменен");
+                if (MessageBox.Show(@"Все ресурсы заняты, ваш запрос отменен") == DialogResult.OK)
+                    timer1.Start();
             }
             catch (ResIsChanged ee)
             {
-                dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Value = "Busy";
-                dataGridView1.Rows[Convert.ToInt32(ee.Message)].Cells[1].Style.BackColor = Color.Red;
-                toolStripStatusLabel1.Text = $@"Сломанный ресурс был заменен на {ee.Message} ячейку.";
+                dataGridView1.Rows[Convert.ToInt32(ee.Message) - 1].Cells[1].Value =
+                    Model.Resources[Convert.ToInt32(ee.Message) - 1];
+                dataGridView1.Rows[Convert.ToInt32(ee.Message) - 1].Cells[1].Style.BackColor = Color.Red;
+                dataGridView1.Rows[Convert.ToInt32(ee.Message) - 1].Cells[2].Value =
+                    Model.RequestIDs[Convert.ToInt32(ee.Message) - 1];
+                toolStripStatusLabel1.Text = $@"Сломанный ресурс был заменен на ресурс в ячейке {ee.Message}.";
             }
             catch (ResIsBusy ee)
             {
@@ -160,7 +187,7 @@ namespace GagLab1_WF
             }
             catch (ArgumentOutOfRangeException) { }
 
-            File.WriteAllLines(SetUp.Path, Model.Resources);
+            File.WriteAllText(SetUp.Path, JsonSerializer.Serialize(Model));
         }
     }
 
@@ -176,12 +203,10 @@ namespace GagLab1_WF
         public ResIsFree(string mes) : base(mes) { }
     }
 
-    class ResIsBroken : Exception
+    class AllResIsBusy : Exception
     {
-        public ResIsBroken(string mes) : base(mes) { }
+        public AllResIsBusy(string mes) : base(mes) { }
     }
-
-    class AllResIsBusy : Exception { }
 
     class ResIsChanged : Exception
     {
@@ -221,8 +246,8 @@ namespace GagLab1_WF
                 ClearModel(form);
             else
             {
-                Model.Resources = File.ReadAllLines(Path);
-                GenTable(Model.Resources, form);
+                form.Model = JsonSerializer.Deserialize<Model>(File.ReadAllText(Path));
+                GenTable(form);
             }
         }
 
@@ -259,15 +284,15 @@ namespace GagLab1_WF
             }
         }
 
-        public static void GenTable(string[] vModel, Form1 form)
+        public static void GenTable(Form1 form)
         {
-            for (int i = 0; i < vModel.Length; i++)
+            for (int i = 0; i < form.Model.Resources.Length; i++)
             {
-                object[] row = {$"{i + 1}", vModel[i]};
+                object[] row = {$"{i + 1}", form.Model.Resources[i], form.Model.RequestIDs[i]};
                 form.dataGridView1.Rows.Add(row);
-                if (vModel[i] == "Free")
+                if (form.Model.Resources[i] == "Free")
                     form.dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Green;
-                else if (vModel[i] == "Busy")
+                else if (form.Model.Resources[i] == "Busy")
                     form.dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Red;
                 else
                     form.dataGridView1.Rows[i].Cells[1].Style.BackColor = Color.Orange;
@@ -275,56 +300,63 @@ namespace GagLab1_WF
         }
     }
 
-    static class Model
+    public class Model
     {
-        public static string[] Resources;
+        public string[] Resources;
+        public string[] RequestIDs;
+        public int N = 100;
 
-        public static void Occupy(string cn)
+        public void Occupy(string cn)
         {
             if ((Convert.ToInt16(cn) > Resources.Length) | (Convert.ToInt16(cn) < 0)) throw new ResIdInvalid();
             Resources[Convert.ToInt16(cn)] = "Busy";
+            RequestIDs[Convert.ToInt16(cn)] = N.ToString();
+            N++;
             throw new ResIsBusy((Convert.ToInt32(cn) + 1).ToString());
         }
 
-        public static void Free(string cn)
+        public void Free(string cn)
         {
             if ((Convert.ToInt16(cn) > Resources.Length) | (Convert.ToInt16(cn) < 0)) throw new ResIdInvalid();
             Resources[Convert.ToInt16(cn)] = "Free";
+            RequestIDs[Convert.ToInt16(cn)] = "";
             throw new ResIsFree((Convert.ToInt32(cn) + 1).ToString());
         }
 
-        public static void Broke(string cn, Form1 form)
+        public void Broke(string cn, Form1 form)
         {
-            Resources[Convert.ToInt16(cn)] = "Broken";
             if (Resources[Convert.ToInt16(cn)] == "Busy")
                 Change(cn, form);
-            else 
+            else
                 Refuse(cn, form);
-            throw new ResIsBroken((Convert.ToInt32(cn) + 1).ToString());
+            Resources[Convert.ToInt16(cn)] = "Broken";
+            form.toolStripStatusLabel1.Text = $@"Ресурс в ячейке {Convert.ToInt32(cn) + 1} сломан.";
         }
 
-        public static void Refuse(string cn, Form1 form1)
+        public void Refuse(string cn, Form1 form1)
         {
             Resources[Convert.ToInt16(cn)] = "Free";
             form1.dataGridView1.Rows[Convert.ToInt32(cn)].Cells[1].Value = "Free";
             form1.dataGridView1.Rows[Convert.ToInt32(cn)].Cells[1].Style.BackColor = Color.Green;
-            form1.toolStripStatusLabel1.Text = $@"Ресурс в ячейке {Convert.ToInt32(cn) - 1} восстановлен.";
+            form1.dataGridView1.Rows[Convert.ToInt32(cn)].Cells[2].Value = "";
         }
 
-        private static void Change(string cn, Form1 form1)
+        private void Change(string cn, Form1 form1)
         {
+            Resources[Convert.ToInt16(cn)] = "Broken";
             for (int i = 0; i < Resources.Length; i++)
             {
-                if (i != Convert.ToInt32(cn)-1 && Resources[i] != "Busy" && Resources[i] != "Broken")
+                if (Resources[i] != "Busy" && Resources[i] != "Broken")
                 {
                     Resources[i] = "Busy";
-                    Refuse(cn,form1);
+                    RequestIDs[i] = RequestIDs[Convert.ToInt32(cn)];
+                    RequestIDs[Convert.ToInt32(cn)] = "";
+                    Refuse(cn, form1);
                     throw new ResIsChanged((i + 1).ToString());
                 }
             }
 
-            Refuse(cn,form1);
-            throw new AllResIsBusy();
+            throw new AllResIsBusy(cn);
         }
     }
 }
